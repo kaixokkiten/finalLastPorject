@@ -55,11 +55,11 @@ class Player():
 		self.left_animation = []
 		self.counter = 0
 		self.idx = 0	#For cycling through right_animation list
- 		
+		
 		for num in range(1, 5):		#Only have 4 images for SmolCh
-			going_right = pygame.image.load(f'imgs/SmolCh{num}.png') 	#Loads the image
+			going_right = pygame.image.load(f'imgs/SmolCh{num}.png')	#Loads the image
 			going_right = pygame.transform.scale(going_right, (50, 100))	#Scales the image
-			going_left = pygame.transform.flip(going_right, True, False)		#Flips all of the going_right images	
+			going_left = pygame.transform.flip(going_right, True, False)	#Flips all of the going_right images	
 			self.right_animation.append(going_right)
 			self.left_animation.append(going_left)
 
