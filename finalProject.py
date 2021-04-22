@@ -6,8 +6,8 @@ pygame.init()
 
 #-----------------------------Set Other Variables-------------------------------
 tile_size = 50
-clock = pygame.time.Clock()
-frame_rate = 60
+clock = pygame.time.Clock()		#Create clock variable for framerate usage
+frame_rate = 60		#Setting framerate makes the game run at same speed
 #-----------------------------Set Game Window-----------------------------------
 #Set game window size (pixel)
 screen_width = 1000
@@ -22,7 +22,7 @@ pygame.display.set_caption("CNIT481Project")
 background = pygame.image.load('imgs/Background.png')
 
 
-#-----------------------------Set World-----------------------------------------
+#-----------------------------Set The World-----------------------------------------
 world_grid = [
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -53,15 +53,15 @@ class Player():
 		#For animation
 		self.right_animation = []
 		self.left_animation = []
-		self.counter = 0
-		self.idx = 0	#For cycling through right_animation list
+		self.counter = 0	#For setting character animation speed
+		self.idx = 0	#For cycling through animation lists (both right and left)
  		
 		for num in range(1, 5):		#Only have 4 images for SmolCh
 			going_right = pygame.image.load(f'imgs/SmolCh{num}.png') 	#Loads the image
 			going_right = pygame.transform.scale(going_right, (50, 100))	#Scales the image
 			going_left = pygame.transform.flip(going_right, True, False)		#Flips all of the going_right images	
-			self.right_animation.append(going_right)
-			self.left_animation.append(going_left)
+			self.right_animation.append(going_right)	#Adds all going_right images to the right_animation list
+			self.left_animation.append(going_left)		#Adds all going_left images to the left_animation list
 
 		#Starting image
 		self.image = self.right_animation[self.idx]
@@ -190,19 +190,18 @@ world_instance = World(world_grid)
 run = True
 while run:
 
-	clock.tick(frame_rate)		#For fixing framerate
-	#Set images using blit function
-	game_window.blit(background, (0, 0))
+	clock.tick(frame_rate)		#For setting a limit on FPS (also sets consistency of game)
 
-	world_instance.draw()
-	player_instance.update()
+	game_window.blit(background, (0, 0))	#Set background image using blit function
+
+	world_instance.draw()		#Calls the draw function in the World class
+	player_instance.update()	#Updates the player movements in the Player class
 
 	#If user clicks 'X', or close window in any way, the program would exit
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			run = False
 
-	#Updates the display window		
-	pygame.display.update()
+	pygame.display.update()		#Updates the display window	so images are updated repeatedly
 
 pygame.quit()
