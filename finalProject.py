@@ -1,5 +1,7 @@
 import pygame
 from pygame.locals import *
+import pickle
+import os
 
 #Initialize pygame
 pygame.init()
@@ -10,6 +12,8 @@ clock = pygame.time.Clock()		#Create clock variable for framerate usage
 frame_rate = 60		#Setting framerate makes the game run at same speed
 game_over = 0		#Setting game over variable to signify end of game
 menu = True		#Set variable for determining whether the game is in main menu or not
+level = 1
+
 #-----------------------------Set Game Window-----------------------------------
 #Set game window size (pixel)
 screen_width = 1000
@@ -30,29 +34,29 @@ exit_img = pygame.image.load('imgs/exitBtn.png')
 exit_img = pygame.transform.scale(exit_img, (tile_size * 3, tile_size))
 
 #-----------------------------Set The World-----------------------------------------
-world_grid = [
-[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1],
-[1, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 1],
-[1, 0, 0, 0, 0, 2, 1, 1, 4, 4, 4, 4, 4, 4, 1, 1, 2, 0, 0, 1],
-[1, 2, 2, 2, 2, 1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 1, 1, 2, 2, 1]
-]
-
+# world_grid = [
+# [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+# [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 0, 0, 0, 3, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+# [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1],
+# [1, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 1],
+# [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 1],
+# [1, 0, 0, 0, 0, 2, 1, 1, 4, 4, 4, 4, 4, 4, 1, 1, 2, 0, 0, 1],
+# [1, 2, 2, 2, 2, 1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 1, 1, 2, 2, 1]
+# ]
+# there is a better way to store level data, loaded in using pickle
 #-----------------------------Button Class--------------------------------------
 class Button():
 	def __init__(self, x, y, image):
@@ -248,6 +252,10 @@ class World():
 				if tile == 4:
 					lava = Lava(column_ctr * tile_size, row_ctr * tile_size + int(tile_size//2))	#Set x and y coordinates of lava object
 					lava_group.add(lava)
+				if tile == 8:
+					door = Door(column_ctr * tile_size, row_ctr * tile_size)	#Set x and y coordinates of lava object
+					door_group.add(door)
+					pass
 				column_ctr += 1
 			row_ctr += 1
 
@@ -270,7 +278,6 @@ class Enemy(pygame.sprite.Sprite):		#Access the sprite class from pygame's libra
 		self.direction = 1		#For updating coordinate in order to move
 		self.direction_ctr = 0		#For setting the maximum number of spaces to move
 
-	
 	def update(self):
 		self.rect.x += self.direction	#Continuously move enemy everytime program calls update function in the while loop
 		#If direction_ctr reaches maximum of 40 pixels, the enemy flips direction
@@ -291,12 +298,33 @@ class Lava(pygame.sprite.Sprite):
 		self.rect.x = x
 		self.rect.y = y
 
+#-----------------------------Exit Door Class--------------------------------------
+#Almost same as Lava class
+class Door(pygame.sprite.Sprite):
+	def __init__(self, x, y):
+		pygame.sprite.Sprite.__init__(self)
 
+		door_image = pygame.image.load('imgs/endDoor.png')
+		self.image = pygame.transform.scale(door_image, (tile_size, tile_size*2))
+		self.rect = self.image.get_rect()
+		self.rect.x = x
+		self.rect.y = y
 #Create instances and groups of classes
 player_instance = Player(100, screen_height - 150)
+
 enemy_group = pygame.sprite.Group()		#Group function creates a list for adding enemies into
 lava_group = pygame.sprite.Group()		#Same as enemy group
-world_instance = World(world_grid)
+door_group = pygame.sprite.Group()		#Same as lava group
+
+#load in level data
+#check if level file exists, if it does, open it. apparently this is bad so if I have time I will fix it later
+
+if os.path.exists(f'level{level}_data.pkl'):
+	pickled = open(f'level{level}_data.pkl', 'rb')
+	world_grid = pickle.load(pickled)
+
+world_instance = World(world_grid) 
+
 #-----Button instances
 restart_button = Button(screen_width - 600, screen_height // 2 + 50, restart_img)
 start_button = Button(screen_width - 900, screen_height // 2 + 50, start_img)
