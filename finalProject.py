@@ -401,7 +401,7 @@ while run:
 				world = changeLevel(level)
 				# player_instance.reset(100, screen_height - 150)		#Resets instance if restart button is hit
 				game_over = 0
-				score = 0
+				score = 240
 
 		if game_over == 1: # if player has beat the level
 			level += 1
