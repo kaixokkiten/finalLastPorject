@@ -18,6 +18,7 @@ max_level = 3
 
 #colors
 white = (255, 255, 255)
+blue = (0, 0, 255)
 #-----------------------------Set Game Window-----------------------------------
 #Set game window size (pixel)
 screen_width = 1000
@@ -409,11 +410,13 @@ while run:
 				world = changeLevel(level)
 				game_over = 0
 			else:
-				restart_button.draw()
-				level = 1
-				world_grid = []
-				world = changeLevel(level)
-				game_over = 0
+				draw_text('YOU WIN', gameOver_font, blue, (screen_width//2 - 140), screen_height//2)
+				draw_text('SCORE: ' + str(score), font_score, white, (screen_width//2 - 140), (screen_height//2) - 30)
+				if restart_button.draw():
+					level = 1
+					world_grid = []
+					world = changeLevel(level)
+					game_over = 0
 
 
 	#If user clicks 'X', or close window in any way, the program would exit
