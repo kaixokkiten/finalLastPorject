@@ -12,8 +12,12 @@ clock = pygame.time.Clock()		#Create clock variable for framerate usage
 frame_rate = 60		#Setting framerate makes the game run at same speed
 game_over = 0		#Setting game over variable to signify end of game
 menu = True		#Set variable for determining whether the game is in main menu or not
+score = 240 #score based on time like in Mario
 level = 1
+max_level = 3
 
+#colors
+white = (255, 255, 255)
 #-----------------------------Set Game Window-----------------------------------
 #Set game window size (pixel)
 screen_width = 1000
@@ -23,6 +27,10 @@ screen_height = 1000
 game_window = pygame.display.set_mode((screen_width, screen_height))
 #Set caption of the window
 pygame.display.set_caption("CNIT481Project")
+
+#font
+font_score = pygame.font.SysFont('Comic Sans', 30)
+gameOver_font = pygame.font.SysFont('Comic Sans', 70)
 
 #-----------------------------Load Images---------------------------------------
 background = pygame.image.load('imgs/Background.png')
@@ -57,6 +65,25 @@ exit_img = pygame.transform.scale(exit_img, (tile_size * 3, tile_size))
 # [1, 2, 2, 2, 2, 1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 1, 1, 2, 2, 1]
 # ]
 # there is a better way to store level data, loaded in using pickle
+
+def draw_text(text, font, color, x, y):
+	img = font.render(text, True, color)
+	game_window.blit(img, (x, y))
+
+#function to reset level
+def changeLevel(level):
+	player_instance.reset(100, screen_height - 130)
+	enemy_group.empty()
+	lava_group.empty()
+	door_group.empty()
+
+	if os.path.exists(f'level{level}_data.pkl'):
+		pickled = open(f'level{level}_data.pkl', 'rb')
+		world_grid = pickle.load(pickled)
+	world_instance = World(world_grid)
+
+	return world_instance
+
 #-----------------------------Button Class--------------------------------------
 class Button():
 	def __init__(self, x, y, image):
@@ -152,18 +179,21 @@ class Player():
 
 			#Checking for enemy collision
 			if pygame.sprite.spritecollide(self, enemy_group, False):
-				game_over = 1	#Sets game_over to 1 if player collides with enemy
+				game_over = -1	#Sets game_over to 1 if player collides with enemy
 
 			#Checking for lava collision
 			if pygame.sprite.spritecollide(self, lava_group, False):
-				game_over = 1	#Same as enemy collision
+				game_over = -1	#Same as enemy collision
 					
+			#checking for end door collision
+			if pygame.sprite.spritecollide(self, door_group, False):
+				game_over = 1
 
 			#Update player coordinates
 			self.rect.x += temp_x
 			self.rect.y += temp_y
 
-		elif game_over == 1:
+		elif game_over == -1:
 			#Create character animation when player dies
 			self.image = self.dead_charc
 			#Animates the character ascending when dead 
@@ -172,7 +202,7 @@ class Player():
 			
 		#Set player image using blit function, draws player onto screen
 		game_window.blit(self.image, self.rect)		#Uses blit function to draw character onto the screen
-		pygame.draw.rect(game_window, (255, 255, 255), self.rect, 2)	#Draws collision box around character for visualizing collision
+		#pygame.draw.rect(game_window, (255, 255, 255), self.rect, 2)	#Draws collision box around character for visualizing collision
 
 		return game_over
 
@@ -253,7 +283,7 @@ class World():
 					lava = Lava(column_ctr * tile_size, row_ctr * tile_size + int(tile_size//2))	#Set x and y coordinates of lava object
 					lava_group.add(lava)
 				if tile == 8:
-					door = Door(column_ctr * tile_size, row_ctr * tile_size)	#Set x and y coordinates of lava object
+					door = Door(column_ctr * tile_size, row_ctr * tile_size - (tile_size//2))	#Set x and y coordinates of lava object
 					door_group.add(door)
 					pass
 				column_ctr += 1
@@ -263,13 +293,13 @@ class World():
 	def draw(self):
 		for tile in self.tile_list:
 			game_window.blit(tile[0], tile[1])	#Uses blit function to draw tiles onto the screen
-			pygame.draw.rect(game_window, (255, 255, 255), tile[1], 2)	#Draws collision box around tiles for visualizing collision
+			#pygame.draw.rect(game_window, (255, 255, 255), tile[1], 2)	#Draws collision box around tiles for visualizing collision
 
 #-----------------------------Enemy Class--------------------------------------
 class Enemy(pygame.sprite.Sprite):		#Access the sprite class from pygame's library (Enemy class will be a child of pygame's Sprite class)
 	def __init__(self, x, y):
 		pygame.sprite.Sprite.__init__(self)
-		
+
 		slime_image = pygame.image.load('imgs/slime.png')
 		self.image = pygame.transform.scale(slime_image, (tile_size, 40))
 		self.rect = self.image.get_rect()
@@ -286,7 +316,7 @@ class Enemy(pygame.sprite.Sprite):		#Access the sprite class from pygame's libra
 			self.direction *= -1
 			self.direction_ctr *= -1
 
-#-----------------------------Lava Class--------------------------------------
+#----------------------------- Lava Class --------------------------------------
 #Almost same as enemy class
 class Lava(pygame.sprite.Sprite):
 	def __init__(self, x, y):
@@ -298,14 +328,14 @@ class Lava(pygame.sprite.Sprite):
 		self.rect.x = x
 		self.rect.y = y
 
-#-----------------------------Exit Door Class--------------------------------------
+#----------------------------- Exit Door Class --------------------------------------
 #Almost same as Lava class
 class Door(pygame.sprite.Sprite):
 	def __init__(self, x, y):
 		pygame.sprite.Sprite.__init__(self)
 
 		door_image = pygame.image.load('imgs/endDoor.png')
-		self.image = pygame.transform.scale(door_image, (tile_size, tile_size*2))
+		self.image = pygame.transform.scale(door_image, (tile_size,int( tile_size*1.5)))
 		self.rect = self.image.get_rect()
 		self.rect.x = x
 		self.rect.y = y
@@ -333,9 +363,14 @@ exit_button = Button(screen_width - 300, screen_height // 2 + 50, exit_img)
 #-----------------------------Game Loop Area--------------------------------------
 #Set run to True to keep the game running
 run = True
+frames = 0
+
 while run:
 
 	clock.tick(frame_rate)		#For setting a limit on FPS (also sets consistency of game)
+	frames += 1 #increase the frame counter
+	if frames == 60:
+		frames = 0
 
 	game_window.blit(background, (0, 0))	#Set background image using blit function
 
@@ -349,16 +384,37 @@ while run:
 		
 		if game_over == 0:		#If player is still alive
 			enemy_group.update()		#Updates enemy's position while player is still alive
-
+			#score goes down every 60 frames
+			if frames == 0:
+				score -= 1
+			draw_text('SCORE: ' + str(score), font_score, white, tile_size-10, 10)
 		enemy_group.draw(game_window)		#Draws enemies to the screen
 		lava_group.draw(game_window)		#Same as enemies
+		door_group.draw(game_window)		#same as lava
 		
 		game_over = player_instance.update(game_over)	#Updates the player movements in the Player class and game_over status
 
-		if game_over == 1:		#If player has died
+		if game_over == -1:		#If player has died
 			if restart_button.draw():		#Calls draw function if player dies
-				player_instance.reset(100, screen_height - 150)		#Resets instance if restart button is hit
+				world_grid = []
+				world = changeLevel(level)
+				# player_instance.reset(100, screen_height - 150)		#Resets instance if restart button is hit
 				game_over = 0
+				score = 0
+
+		if game_over == 1: # if player has beat the level
+			level += 1
+			if level <= max_level:
+				world_grid = []
+				world = changeLevel(level)
+				game_over = 0
+			else:
+				restart_button.draw()
+				level = 1
+				world_grid = []
+				world = changeLevel(level)
+				game_over = 0
+
 
 	#If user clicks 'X', or close window in any way, the program would exit
 	for event in pygame.event.get():
